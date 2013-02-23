@@ -17,7 +17,7 @@ class Version extends Eloquent {
     }
 
     public function requires() {
-        $this->hasMany('Required');
+        $this->belongToMany('Version');
     }
 
     public function authors() {
