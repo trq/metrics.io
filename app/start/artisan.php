@@ -11,3 +11,4 @@
 |
 */
 Artisan::add(new FetchPackageMeta);
+Artisan::add(new ImportDevelopers);
