@@ -49,11 +49,10 @@ class FetchPackageMeta extends Command {
 	 */
 	public function fire()
 	{
-        if (file_exists($this->location . "/list.txt")) {
-            unlink($this->location . "/list.txt");
-        }
+        $number_of_packages = $this->option('packages');
+        $pages = ceil($number_of_packages / 15);
 
-        foreach (range(1, $this->option('pages')) as $page) {
+        foreach (range(1, $pages) as $page) {
             $client   = new Client($this->host);
             $request  = $client->get("/search.json?page={$page}&q=");
             $response = $request->send();
@@ -61,21 +60,10 @@ class FetchPackageMeta extends Command {
 
             $data = json_decode($json);
 
-            foreach ($data->results as $package) {
-
-                if (!file_exists($this->location . "/" . str_replace('/', '-', $package->name) . '.json')) {
-                    $this->info("Fetching: {$package->name}");
-                    try {
-                        $client      = new Client($this->host);
-                        $request     = $client->get("/packages/{$package->name}.json");
-                        $response    = $request->send();
-                        $json        = $response->getBody();
-
-                        file_put_contents($this->location . "/list.txt", "{$package->name}\n", FILE_APPEND);
-                        file_put_contents($this->location . "/" . str_replace('/', '-', $package->name) . '.json', $json);
-                    } catch (Exception $e) {
-                        $this->error("Failed to fetch: {$package->name}");
-                    }
+            for ($i = 0; $i < $number_of_packages; $i++) {
+                if (isset($data->results[$i])) {
+                    $package = $data->results[$i];
+                    $this->getPackage($package->name);
                 }
             }
         }
@@ -89,8 +77,46 @@ class FetchPackageMeta extends Command {
 	protected function getOptions()
 	{
 		return array(
-			array('pages', null, InputOption::VALUE_OPTIONAL, 'The number of pages to retrieve. Each page contains 15 packages.', 4),
+			array('packages', null, InputOption::VALUE_OPTIONAL, 'The number of packages to retrieve. This will fetch this number of packages + all of there dependencies.', 20),
 		);
 	}
 
+    protected function getPackage($package) {
+        list($basename, $name) = explode('/', $package);
+
+        if (!file_exists("{$this->location}/{$basename}/{$name}.json")) {
+            $this->info("Fetching: {$name}");
+            try {
+                $client      = new Client($this->host);
+                $request     = $client->get("/packages/{$basename}/{$name}.json");
+                $response    = $request->send();
+                $body        = $response->getBody();
+                $json        = json_decode($body);
+
+                // deal with dependencies
+                foreach ($json as $package) {
+                    foreach ($package->versions as $version) {
+                        if (property_exists($version, 'require')) {
+                            foreach ($version->require as $dependency => $v) {
+                                if (strpos($dependency, '/') !== false) {
+                                    $this->getPackage($dependency);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (!file_exists("{$this->location}/{$basename}")) {
+                    mkdir("{$this->location}/{$basename}");
+                }
+
+                $this->info("Writting: {$this->location}/$basename/$name.json");
+                file_put_contents("{$this->location}/{$basename}/{$name}.json", $body);
+
+            } catch (Exception $e) {
+                $this->error("Failed to fetch: {$name}");
+                //$this->error($e->getMessage());
+            }
+        }
+    }
 }
