@@ -60,8 +60,8 @@ class ImportDevelopers extends Command {
                     // Loop into different versions of the package.
                     if (property_exists($package, 'versions')) {
                         foreach ($package->versions as $version) {
-                            if (property_exists($package, 'authors')) {
-                                foreach ($package->authors as $developer) {
+                            if (property_exists($version, 'authors')) {
+                                foreach ($version->authors as $developer) {
                                     // We have unique keys on this table to prevent duplicates.
                                     try {
                                         $d = new Developer;
