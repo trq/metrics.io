@@ -57,6 +57,7 @@ class CreatePackageTables extends Migration {
         Schema::create('licenses', function($table) {
             $table->increments('id');
             $table->string('license');
+            $table->unique('license');
             $table->timestamps();
         });
 

@@ -13,3 +13,4 @@
 Artisan::add(new FetchPackageMeta);
 Artisan::add(new ImportDevelopers);
 Artisan::add(new ImportKeywords);
+Artisan::add(new ImportLicenses);
