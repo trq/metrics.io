@@ -44,6 +44,7 @@ class CreatePackageTables extends Migration {
         Schema::create('keywords', function($table) {
             $table->increments('id');
             $table->string('keyword');
+            $table->unique('keyword');
             $table->timestamps();
         });
 
