@@ -7,15 +7,6 @@ class CreatePackageTables extends Migration {
 	/**
      * Create the initial tables used to store package data.
 	 *
-total 64
--rw-r--r--  1 thorpe  staff   79 22 Feb 07:49 Developer.php
--rw-r--r--  1 thorpe  staff  145 22 Feb 18:35 Dist.php
--rw-r--r--  1 thorpe  staff   78 22 Feb 18:34 Keyword.php
--rw-r--r--  1 thorpe  staff   75 22 Feb 07:50 License.php
--rw-r--r--  1 thorpe  staff  305 22 Feb 18:24 Package.php
--rw-r--r--  1 thorpe  staff  152 22 Feb 18:35 Required.php
--rw-r--r--  1 thorpe  staff  149 22 Feb 18:35 Source.php
--rw-r--r--  1 thorpe  staff  608 22 Feb 18:37 Version.php
 	 * @return void
 	 */
 	public function up()
@@ -27,8 +18,23 @@ total 64
             $table->timestamps();
         });
 
+        // Joining table
+        Schema::table('developers_packages', function($table) {
+            $table->integer('developer_id');
+            $table->integer('package_id');
+            $table->timestamps();
+        });
+
+        // Joining table
+        Schema::table('developers_versions', function($table) {
+            $table->integer('developer_id');
+            $table->integer('version_id');
+            $table->timestamps();
+        });
+
         Schema::table('dists', function($table) {
             $table->increments('id');
+            $table->integer('version_id')->unsigned()
             $table->string('type');
             $table->string('url');
             $table->string('reference');
@@ -42,9 +48,23 @@ total 64
             $table->timestamps();
         });
 
+        // Joining table
+        Schema::table('keywords_versions', function($table) {
+            $table->integer('keyword_id');
+            $table->integer('version_id');
+            $table->timestamps();
+        });
+
         Schema::table('licenses', function($table) {
             $table->increments('id');
             $table->string('license');
+            $table->timestamps();
+        });
+
+        // Joining table
+        Schema::table('licenses_versions', function($table) {
+            $table->integer('license_id');
+            $table->integer('version_id');
             $table->timestamps();
         });
 
@@ -58,19 +78,26 @@ total 64
             $table->timestamps();
         });
 
-        Schema::table('requires', function($table) {
-            $table->increments('id');
-            $table->string('package');
-            $table->string('version');
-            $table->timestamps();
-        });
-
         Schema::table('sources', function($table) {
             $table->increments('id');
+            $table->integer('version_id')->unsigned()
             $table->string('type');
             $table->string('url');
             $table->string('reference');
             $table->string('shasum');
+            $table->timestamps();
+        });
+
+        Schema::table('versions', function($table) {
+            $table->increments('id');
+            $table->string('name');
+            $table->string('description');
+            $table->string('homepage');
+            $table->string('version');
+            $table->string('version_normalized');
+            $table->string('type');
+            $table->string('time');
+            $table->string('autoload_json');
             $table->timestamps();
         });
 	}
